@@ -7,8 +7,12 @@ tape('encryption round trip', function (test) {
   const plaintext = 'plaintext message'
   const key = crypto.encryptionKey()
   const nonce = crypto.nonce()
-  const encrypted = crypto.encryptString(plaintext, nonce, key)
-  const decrypted = crypto.decryptString(encrypted, nonce, key)
+  const encrypted = crypto.encryptString({
+    plaintext, nonce, key
+  })
+  const decrypted = crypto.decryptString({
+    ciphertext: encrypted, nonce, key
+  })
   test.same(plaintext, decrypted, 'identical')
   test.end()
 })
@@ -17,7 +21,9 @@ tape('bad decryption', function (test) {
   const random = crypto.random(64)
   const key = crypto.encryptionKey()
   const nonce = crypto.nonce()
-  const decrypted = crypto.decryptString(random, nonce, key)
+  const decrypted = crypto.decryptString({
+    ciphertext: random, nonce, key
+  })
   test.assert(decrypted === false)
   test.end()
 })
@@ -26,8 +32,12 @@ tape('binary encryption round trip', function (test) {
   const binary = crypto.random(32)
   const key = crypto.encryptionKey()
   const nonce = crypto.nonce()
-  const encrypted = crypto.encryptBinary(binary, nonce, key)
-  const decrypted = crypto.decryptBinary(encrypted, nonce, key)
+  const encrypted = crypto.encryptBinary({
+    plaintext: binary, nonce, key
+  })
+  const decrypted = crypto.decryptBinary({
+    ciphertext: encrypted, nonce, key
+  })
   test.same(binary, decrypted, 'identical')
   test.end()
 })
@@ -36,7 +46,9 @@ tape('binary bad decryption', function (test) {
   const random = crypto.random(32)
   const key = crypto.encryptionKey()
   const nonce = crypto.nonce()
-  const decrypted = crypto.decryptBinary(random, nonce, key)
+  const decrypted = crypto.decryptBinary({
+    ciphertext: random, nonce, key
+  })
   test.assert(decrypted === false)
   test.end()
 })
@@ -44,9 +56,16 @@ tape('binary bad decryption', function (test) {
 tape('signature', function (test) {
   const keyPair = crypto.keyPair()
   const object = { entry: 'plaintext message' }
-  const signature = crypto.signJSON(object, keyPair.secretKey)
+  const signature = crypto.signJSON({
+    message: object,
+    secretKey: keyPair.secretKey
+  })
   test.assert(
-    crypto.verifyJSON(object, signature, keyPair.publicKey)
+    crypto.verifyJSON({
+      message: object,
+      signature,
+      publicKey: keyPair.publicKey
+    })
   )
   test.end()
 })
@@ -54,9 +73,16 @@ tape('signature', function (test) {
 tape('signature with body key', function (test) {
   const keyPair = crypto.keyPair()
   const object = { text: 'plaintext message' }
-  const signature = crypto.signJSON(object, keyPair.secretKey)
+  const signature = crypto.signJSON({
+    message: object,
+    secretKey: keyPair.secretKey
+  })
   test.assert(
-    crypto.verifyJSON(object, signature, keyPair.publicKey)
+    crypto.verifyJSON({
+      message: object,
+      signature,
+      publicKey: keyPair.publicKey
+    })
   )
   test.end()
 })
@@ -66,9 +92,13 @@ tape('signature with keys from seed', function (test) {
   const seed = crypto.keyPairSeed()
   const keyPair = crypto.keyPairFromSeed(seed)
   const object = { entry: plaintext }
-  const signature = crypto.signJSON(object, keyPair.secretKey)
+  const signature = crypto.signJSON({
+    message: object, secretKey: keyPair.secretKey
+  })
   test.assert(
-    crypto.verifyJSON(object, signature, keyPair.publicKey)
+    crypto.verifyJSON({
+      message: object, signature, publicKey: keyPair.publicKey
+    })
   )
   test.end()
 })
@@ -127,18 +157,22 @@ tape('validate envelope', function (test) {
   const projectPublicKey = projectKeyPair.publicKey
   const encryptionKey = crypto.encryptionKey()
   const nonce = crypto.nonce()
-  const ciphertext = crypto.encryptJSON(entry, nonce, encryptionKey)
+  const ciphertext = crypto.encryptJSON({
+    plaintext: entry,
+    nonce,
+    key: encryptionKey
+  })
   const envelope = {
     discoveryKey,
     logPublicKey,
     index,
     prior,
-    logSignature: crypto.signBinary(
-      ciphertext, logKeyPair.secretKey
-    ),
-    projectSignature: crypto.signBinary(
-      ciphertext, projectKeyPair.secretKey
-    ),
+    logSignature: crypto.signBinary({
+      message: ciphertext, secretKey: logKeyPair.secretKey
+    }),
+    projectSignature: crypto.signBinary({
+      message: ciphertext, secretKey: projectKeyPair.secretKey
+    }),
     entry: { ciphertext, nonce }
   }
   ajv.validate(schemas.envelope, envelope)

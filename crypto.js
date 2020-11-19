@@ -46,11 +46,9 @@ const STREAM_KEY_BYTES =
 exports.distributionKeyBytes =
 sodium.crypto_stream_KEYBYTES
 
-exports.distributionKey = function () {
-  return random(STREAM_KEY_BYTES)
-}
+exports.distributionKey = () => random(STREAM_KEY_BYTES)
 
-exports.discoveryKey = function (distributionKey) {
+exports.discoveryKey = distributionKey => {
   assert(typeof distributionKey === 'string')
   return hash(distributionKey)
 }
@@ -63,17 +61,13 @@ const SECRETBOX_KEY_BYTES =
 exports.encryptionKeyBytes =
 sodium.crypto_secretbox_KEYBYTES
 
-exports.encryptionKey = function () {
-  return random(SECRETBOX_KEY_BYTES)
-}
+exports.encryptionKey = () => random(SECRETBOX_KEY_BYTES)
 
 const SECRETBOX_NONCE_BYTES =
 exports.nonceBytes =
 sodium.crypto_secretbox_NONCEBYTES
 
-exports.nonce = function () {
-  return random(SECRETBOX_NONCE_BYTES)
-}
+exports.nonce = () => random(SECRETBOX_NONCE_BYTES)
 
 const SECRETBOX_MAC_BYTES =
 exports.encryptionMACBytes =
@@ -85,12 +79,12 @@ const inputTypes = {
   Binary: 'base64'
 }
 
-Object.keys(inputTypes).forEach(function (suffix) {
+Object.keys(inputTypes).forEach(suffix => {
   const encoding = inputTypes[suffix]
-  exports['encrypt' + suffix] = function (plaintext, nonce, key) {
+  exports['encrypt' + suffix] = ({ plaintext, nonce, key }) => {
     return encrypt({ plaintext, encoding, nonce, key })
   }
-  exports['decrypt' + suffix] = function (ciphertext, nonce, key) {
+  exports['decrypt' + suffix] = ({ ciphertext, nonce, key }) => {
     return decrypt({ ciphertext, encoding, nonce, key })
   }
 })
@@ -130,9 +124,7 @@ const SIGN_SEED_BYTES =
 exports.keyPairSeedBytes =
 sodium.crypto_sign_SEEDBYTES
 
-exports.keyPairSeed = function () {
-  return random(SIGN_SEED_BYTES)
-}
+exports.keyPairSeed = () => random(SIGN_SEED_BYTES)
 
 const SIGN_PUBLIC_KEY_BYTES =
 exports.publicKeyBytes =
@@ -142,7 +134,7 @@ const SIGN_SECRET_KEY_BYTES =
 exports.secretKeyBytes =
 sodium.crypto_sign_SECRETKEYBYTES
 
-exports.keyPairFromSeed = function (seed) {
+exports.keyPairFromSeed = seed => {
   assert(typeof seed === 'string')
   const publicKeyBuffer = Buffer.alloc(SIGN_PUBLIC_KEY_BYTES)
   const secretKeyBuffer = Buffer.alloc(SIGN_SECRET_KEY_BYTES)
@@ -157,7 +149,7 @@ exports.keyPairFromSeed = function (seed) {
   }
 }
 
-exports.keyPair = function () {
+exports.keyPair = () => {
   const publicKeyBuffer = Buffer.alloc(SIGN_PUBLIC_KEY_BYTES)
   const secretKeyBuffer = Buffer.alloc(SIGN_SECRET_KEY_BYTES)
   sodium.crypto_sign_keypair(publicKeyBuffer, secretKeyBuffer)
@@ -171,12 +163,12 @@ const SIGNATURE_BYTES =
 exports.signatureBytes =
 sodium.crypto_sign_BYTES
 
-Object.keys(inputTypes).forEach(function (suffix) {
+Object.keys(inputTypes).forEach(suffix => {
   const encoding = inputTypes[suffix]
-  exports['sign' + suffix] = function (object, secretKey) {
-    return sign({ message: object, encoding, secretKey })
+  exports['sign' + suffix] = ({ message, secretKey }) => {
+    return sign({ message, encoding, secretKey })
   }
-  exports['verify' + suffix] = function (message, signature, publicKey) {
+  exports['verify' + suffix] = ({ message, signature, publicKey }) => {
     return verify({ message, encoding, signature, publicKey })
   }
 })
@@ -226,13 +218,13 @@ function decode (message, encoding) {
 
 // Envelopes
 
-exports.envelope = function ({
+exports.envelope = ({
   entry,
   publicKey,
   logKeyPair,
   projectKeyPair,
   encryptionKey
-}) {
+}) => {
   assert(typeof entry === 'object')
   assert(typeof logKeyPair === 'object')
   assert(typeof logKeyPair.publicKey === 'string')
@@ -245,28 +237,34 @@ exports.envelope = function ({
   assert(index >= 0)
   if (index > 0) assert(typeof entry.prior === 'string')
   const nonce = exports.nonce()
-  const ciphertext = exports.encryptJSON(entry, nonce, encryptionKey)
+  const ciphertext = exports.encryptJSON({
+    plaintext: entry,
+    nonce,
+    key: encryptionKey
+  })
   const envelope = {
     discoveryKey: entry.discoveryKey,
     index: entry.index,
     prior: entry.prior,
     logPublicKey: logKeyPair.publicKey,
-    logSignature: exports.signBinary(
-      ciphertext, logKeyPair.secretKey
-    ),
-    projectSignature: exports.signBinary(
-      ciphertext, projectKeyPair.secretKey
-    ),
+    logSignature: exports.signBinary({
+      message: ciphertext,
+      secretKey: logKeyPair.secretKey
+    }),
+    projectSignature: exports.signBinary({
+      message: ciphertext,
+      secretKey: projectKeyPair.secretKey
+    }),
     entry: { ciphertext, nonce }
   }
   return envelope
 }
 
-exports.validateEnvelope = function ({
+exports.validateEnvelope = ({
   envelope,
   projectPublicKey,
   encryptionKey
-}) {
+}) => {
   assert(typeof envelope === 'object')
   assert(typeof projectPublicKey === 'string')
   assert(typeof encryptionKey === 'string')
@@ -281,26 +279,30 @@ exports.validateEnvelope = function ({
 
   // Validate Signatures
   const ciphertext = envelope.entry.ciphertext
-  const validLogSiganture = exports.verifyBinary(
-    ciphertext, envelope.logSignature, envelope.logPublicKey
-  )
+  const validLogSiganture = exports.verifyBinary({
+    message: ciphertext,
+    signature: envelope.logSignature,
+    publicKey: envelope.logPublicKey
+  })
   if (!validLogSiganture) {
     report('invalid log signature', 'logSignature')
   }
-  const validProjectSignature = exports.verifyBinary(
-    ciphertext, envelope.projectSignature, projectPublicKey
-  )
+  const validProjectSignature = exports.verifyBinary({
+    message: ciphertext,
+    signature: envelope.projectSignature,
+    publicKey: projectPublicKey
+  })
   if (!validProjectSignature) {
     report('invalid project signature', 'projectSignature')
   }
 
   // Validate Entry
   if (encryptionKey) {
-    const entry = exports.decryptJSON(
-      envelope.entry.ciphertext,
-      envelope.entry.nonce,
-      encryptionKey
-    )
+    const entry = exports.decryptJSON({
+      ciphertext: envelope.entry.ciphertext,
+      nonce: envelope.entry.nonce,
+      key: encryptionKey
+    })
     if (!entry) {
       report('could not decrypt entry', 'encryption')
     } else {
@@ -326,7 +328,7 @@ exports.validateEnvelope = function ({
 
 const invitationEncrypted = ['encryptionKey', 'secretKey', 'title']
 
-exports.encryptInvitation = function (options) {
+exports.encryptInvitation = options => {
   const distributionKey = options.distributionKey
   assert(typeof distributionKey === 'string')
   const publicKey = options.publicKey
@@ -340,20 +342,22 @@ exports.encryptInvitation = function (options) {
 
   function encryptProperty (key) {
     if (!has(options, key)) return
-    const encryptMethod = key === 'title'
+    const encryptFunction = key === 'title'
       ? exports.encryptString
       : exports.encryptBinary
     const nonce = exports.nonce()
     returned[key] = {
-      ciphertext: encryptMethod(
-        options[key], nonce, encryptionKey
-      ),
+      ciphertext: encryptFunction({
+        plaintext: options[key],
+        nonce,
+        key: encryptionKey
+      }),
       nonce
     }
   }
 }
 
-exports.decryptInvitation = function (options) {
+exports.decryptInvitation = options => {
   const invitation = options.invitation
   assert(typeof invitation === 'object')
   const encryptionKey = options.encryptionKey
@@ -371,20 +375,20 @@ exports.decryptInvitation = function (options) {
     const decryptMethod = key === 'title'
       ? exports.decryptString
       : exports.decryptBinary
-    returned[key] = decryptMethod(
-      invitation[key].ciphertext,
-      invitation[key].nonce,
-      encryptionKey
-    )
+    returned[key] = decryptMethod({
+      ciphertext: invitation[key].ciphertext,
+      nonce: invitation[key].nonce,
+      key: encryptionKey
+    })
   }
 }
 
 // Encoding
 
-exports.base64ToHex = function (base64) {
+exports.base64ToHex = base64 => {
   return Buffer.from(base64, 'base64').toString('hex')
 }
 
-exports.hexToBase64 = function (base64) {
+exports.hexToBase64 = base64 => {
   return Buffer.from(base64, 'hex').toString('base64')
 }
