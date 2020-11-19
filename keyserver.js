@@ -25,8 +25,8 @@ module.exports = protocol({
     const returned = Buffer.alloc(32)
     sodium.crypto_pwhash(
       returned, password, salt,
-      sodium.crypto_pwhash_OPSLIMIT_INTERACTIVE,
-      sodium.crypto_pwhash_MEMLIMIT_INTERACTIVE,
+      sodium.crypto_pwhash_OPSLIMIT_MODERATE,
+      sodium.crypto_pwhash_MEMLIMIT_MODERATE,
       sodium.crypto_pwhash_ALG_DEFAULT
     )
     return returned
