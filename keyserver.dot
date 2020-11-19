@@ -1,0 +1,56 @@
+digraph {
+  user -> {password, email} -> clientStretch -> clientStretchedPassword;
+  user[shape=rect];
+  clientStretch[label="client\nstretch"];
+  clientStretch[shape=rect];
+  clientStretchedPassword -> authenticationToken;
+  clientStretchedPassword[label="client\nstretched\npassword"];
+
+  random -> authenticationSalt;
+  authenticationSalt[label="authentication\nsalt"];
+  random[shape=rect];
+  {authenticationToken, authenticationSalt} -> serverStretch -> serverStretchedPassword;
+  serverStretch[label="server\nstretch"];
+  authenticationToken[label="authentication\ntoken"];
+  serverStretch[shape=rect];
+  serverStretchedPassword -> verificationHash;
+  verificationHash[label="verification\nhash"];
+  random -> serverWrappedEncryptionKey;
+  serverWrappedEncryptionKey[label="server\nwrapped\nencryption\nkey"];
+  random -> userID;
+  userID[label="user ID"];
+
+  serverStretchedPassword -> serverWrappingKey;
+  serverWrappingKey[label="server\nwrapping\nkey"];
+  serverStretchedPassword[label="server\nstretched\npassword"];
+  {serverWrappingKey, serverWrappedEncryptionKey} -> serverWrappingKeyXOR -> clientWrappedEncryptionKey;
+  serverWrappingKeyXOR[label="XOR",shape=rect];
+  random -> keyAccessToken;
+  keyAccessToken[label="key\naccess\ntoken"];
+  keyAccessToken -> tokenID;
+  keyAccessToken -> keyRequestToken;
+  keyRequestToken[label="key\nrequest\ntoken"];
+  keyAccessToken -> requestAuthenticationKey;
+  requestAuthenticationKey[label="request\nauthentication\nkey"];
+  keyRequestToken -> responseEncryptionKey;
+  responseEncryptionKey[label="response\nencryption\nkey"];
+  {clientWrappedEncryptionKey, responseEncryptionKey} -> serverEncryptionXOR -> ciphertext;
+  clientWrappedEncryptionKey[label="client\nwrapped\nencryption\nkey"];
+  serverEncryptionXOR[label="XOR",shape=rect];
+  keyRequestToken -> responseAuthenticationKey;
+  responseAuthenticationKey[label="response\nauthentication\nkey"];
+  {responseAuthenticationKey, ciphertext} -> authenticate -> MAC;
+  authenticate[shape=rect];
+
+  {ciphertext, responseEncryptionKey} -> clientEncryptionXOR -> clientWrappedEncryptionKey;
+  clientEncryptionXOR[shape=rect,label="XOR"];
+  clientStretchedPassword -> clientWrappingKey;
+  clientWrappingKey[label="client\nwrapping\nkey"];
+  {clientWrappedEncryptionKey, clientWrappingKey} -> clientWrappingKeyXOR -> encryptionKey;
+  encryptionKey[label="encryption\nkey"];
+  encryptionKey[shape=doubleoctagon,height=1,width=1];
+  clientWrappingKeyXOR[label="XOR",shape=rect];
+
+  serverDatabase[shape=cylinder,label="server\ndatabase"];
+  {authenticationSalt, email, userID, serverWrappedEncryptionKey, verificationHash} -> serverDatabase;
+}
