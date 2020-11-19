@@ -56,9 +56,11 @@ The proseline.com server application provides services to paying customers:
 
 3.  The server stores invitations to all the customer's projects, so they can access them even if they lose all their clients.
 
-The server stores keys for reading and writing to projects in encrypted form.  The server does _not_ store the customer's key for decrypting those keys.
+The server stores keys for reading and writing to projects, encrypted with the customer's **privacy key**.
 
-People connect their clients to their paid accounts by logging in via links e-mailed to them by the server.
+The server stores the customer's privacy key, encrypted so that the customer can decrypt it using their **privacy secret**.  Clients never send privacy secrets to the server.
+
+People connect their clients to their paid accounts by logging in via links e-mailed to them by the server.  The client signs login requests for using its client key.
 
 ## Cryptography
 
@@ -75,6 +77,20 @@ On creating a new project, a client generates:
 - a random **project write key pair** for signing entries to all project logs
 
 On joining a project, a client generates a random **log key pair** for signing entries to the client's project log
+
+Clients wrap each entry to each project log in an **envelope**.  Each envelope includes:
+- a signature with the project write secret key
+- a signature with the log write secret key
+- the entry, encrypted with the project read key
+
+Each entry includes a monotonically increasing index, starting with zero.  Each entry after the first includes the cryptographic digest of the prior entry in the log.
+
+Each invitation stored by the proseline.com server application includes:
+- the project distribution key
+- the public project write key
+- the project write secret key, encrypted with the customer's privacy key (optional)
+- the project read key, encrypted with the customer's privacy key (optional)
+- a title for the project, encrypted with the customer's privacy key
 
 ## Inviting
 
