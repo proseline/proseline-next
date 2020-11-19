@@ -56,6 +56,8 @@ The proseline.com server application provides services to paying customers:
 
 3.  The server stores **invitations** to all the customer's projects, so they can access them even if they lose all their clients.
 
+4.  The server provides access to ICE servers to improve WebRTC connectivity.
+
 The server stores keys for reading and writing to projects, encrypted with the customer's **privacy key**.
 
 The server stores the customer's privacy key, encrypted so that the customer can decrypt it using their **privacy secret**.  Clients never send privacy secrets to the server.
