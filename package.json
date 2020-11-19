@@ -1,0 +1,21 @@
+{
+  "private": true,
+  "dependencies": {
+    "ajv": "^6.12.6",
+    "fast-json-stable-stringify": "^2.1.0",
+    "has": "^1.0.3",
+    "sodium-universal": "^3.0.3",
+    "tape": "^5.0.1"
+  },
+  "devDependencies": {
+    "licensee": "^8.1.0",
+    "nyc": "^15.1.0",
+    "standard": "^16.0.3"
+  },
+  "scripts": {
+    "coverage": "nyc --reporter=lcov --reporter=text-summary npm run test",
+    "licenses": "licensee --errors-only",
+    "lint": "standard",
+    "test": "tape test/*.test.js"
+  }
+}
