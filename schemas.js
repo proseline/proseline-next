@@ -1,4 +1,4 @@
-// This file exports JSON Schemas and validation functions.
+// This module exports JSON Schemas and validation functions.
 
 const assert = require('assert')
 const crypto = require('./crypto')

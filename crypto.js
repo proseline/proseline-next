@@ -1,3 +1,5 @@
+// This module exports cryptographic functions and constants.
+
 const assert = require('assert')
 const has = require('has')
 const sodium = require('sodium-universal')
