@@ -1,5 +1,7 @@
 // This module exports a protocol implementation for deriving and
 // serving encryption keys.
+//
+// See keyserver.svg for a diagram.
 
 const assert = require('assert')
 const sodium = require('sodium-universal')
