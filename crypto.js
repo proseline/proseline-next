@@ -260,7 +260,7 @@ exports.envelope = ({
   return envelope
 }
 
-exports.validateEnvelope = ({
+exports.verifyEnvelope = ({
   envelope,
   projectPublicKey,
   encryptionKey
@@ -277,7 +277,7 @@ exports.validateEnvelope = ({
     errors.push(error)
   }
 
-  // Validate Signatures
+  // Verify Signatures
   const ciphertext = envelope.entry.ciphertext
   const validLogSiganture = exports.verifyBinary({
     message: ciphertext,
@@ -296,7 +296,7 @@ exports.validateEnvelope = ({
     report('invalid project signature', 'projectSignature')
   }
 
-  // Validate Entry
+  // Verify Entry
   if (encryptionKey) {
     const entry = exports.decryptJSON({
       ciphertext: envelope.entry.ciphertext,

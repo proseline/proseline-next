@@ -137,7 +137,7 @@ tape('discovery key', function (test) {
   test.end()
 })
 
-tape('validate envelope', function (test) {
+tape('verify envelope', function (test) {
   const distributionKey = crypto.distributionKey()
   const discoveryKey = crypto.discoveryKey(distributionKey)
   const index = 1
@@ -177,14 +177,14 @@ tape('validate envelope', function (test) {
   }
   ajv.validate(schemas.envelope, envelope)
   test.same(ajv.errors, null, 'no schema errors')
-  const errors = crypto.validateEnvelope({
+  const errors = crypto.verifyEnvelope({
     envelope, projectPublicKey, encryptionKey
   })
   test.same(errors, [], 'no signature validation errors')
   test.end()
 })
 
-tape('envelope generate and validate', function (test) {
+tape('envelope generate and verify', function (test) {
   const distributionKey = crypto.distributionKey()
   const discoveryKey = crypto.discoveryKey(distributionKey)
   const logKeyPair = crypto.keyPair()
@@ -219,11 +219,11 @@ tape('envelope generate and validate', function (test) {
   test.same(ajv.errors, null, 'no schema validation errors')
   let errors
   test.doesNotThrow(function () {
-    errors = crypto.validateEnvelope({
+    errors = crypto.verifyEnvelope({
       envelope, projectPublicKey, encryptionKey
     })
-  }, '.validateEnvelope() does not throw')
-  test.same(errors, [], '.validateEnvelope() returns no errors')
+  }, '.verifyEnvelope() does not throw')
+  test.same(errors, [], '.verifyEnvelope() returns no errors')
   test.end()
 })
 
