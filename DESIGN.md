@@ -6,31 +6,33 @@ This document outlines the designs of Proseline's data model, protocol, and serv
 
 The basic unit of organization in Proseline is the **project**.
 
-The main work in a project takes the form of **drafts**.  Each draft contains the complete content of one version of a document, along with information on who created the draft, when, and which other drafts their work was based on---its **parents**---if any.
+The main **work** in a project takes the form of **drafts**.  Each draft contains the complete content of one version of a document, along with information on who created it, when, and its **parents**---up to two other drafts that it was based on.
 
-Clients can add **marks** to drafts to give them names, such as "current" or "rewrite".  Clients can move marks from draft to draft over time.
+Participants can add **marks** to drafts to give them names, such as "current" or "rewrite".  Participants can move marks from draft to draft over time.
 
-Clients can add text **notes** to parts of drafts, mostly to share comments.
+Participants can add text **notes** to parts of drafts, mostly to share comments.
 
-Clients can add **replies** to notes and the replies of others.
+Participants can add **replies** to notes and the replies of others.
 
-Clients can publish **corrections** to the texts of notes and replies.
+Participants can publish **corrections** to the texts of notes and replies.
 
-## Clients
+## Participants
 
 Each project has one or more **clients**, of three types:
 
 1.  **Distributors** can share work in the project with others, but can't read the work or contribute to it.
 
-2.  **Readers** can also read the work in the project, as well as distribute it.
+2.  **Readers** can read the work in the project, in addition to distributing it.
 
 3.  **Writers** can contribute work to the project, in addition to reading and distributing it. 
 
+<!--
 |             | Distribute | Read | Write |
 |-------------|------------|------|-------|
 | Distributor | Yes        |      |       |
 | Reader      | Yes        | Yes  |       |
 | Writer      | Yes        | Yes  | Yes   |
+-->
 
 The proseline.com JavaScript application is a client that can distribute, read, and write.
 
@@ -42,7 +44,7 @@ A person may or may not pay for a proseline.com **account**.
 
 ## Distributing
 
-Clients contribute work to a project by creating and sharing project-specific **logs**.  Each log consists of **entries** for contributions to the project made with that particular client.
+Participants contribute work to a project by creating and sharing project-specific **logs**.  Each log consists of **entries** for contributions to the project made with that particular client.
 
 One member of a project may contribute to the project with multiple clients.  For example, they might use the proseline.com web app on their laptop, smartphone, and desktop.
 
@@ -50,7 +52,7 @@ One member of a project may contribute to the project with multiple clients.  Fo
 
 The proseline.com server application provides services to paying customers:
 
-1.  The server distributes all of their projects, so all members of the customer's projects can download work, even when other members aren't online.
+1.  The server distributes work on all of their projects, so all members of the customer's projects can download and share it, even when other members aren't online.
 
 2.  The server invites all of the customer's clients to all of the customer's projects, so they can work on projects across devices without inviting themself manually.
 
@@ -60,7 +62,7 @@ The proseline.com server application provides services to paying customers:
 
 The server stores keys for reading and writing to projects, encrypted with the customer's **privacy key**.
 
-The server stores the customer's privacy key, encrypted so that the customer can decrypt it using their **privacy secret**.  Clients never send privacy secrets to the server.
+The server stores the customer's privacy key, encrypted so that the customer can decrypt it using their **privacy secret**.  Participants never send privacy secrets to the server.
 
 People connect their clients to their paid accounts by logging in via links e-mailed to them by the server.  The client signs login requests for using its client key.
 
@@ -80,7 +82,7 @@ On creating a new project, a client generates:
 
 On joining a project, a client generates a random **log key pair** for signing entries to the client's project log
 
-Clients wrap each entry to each project log in an **envelope**.  Each envelope includes:
+Participants wrap each entry to each project log in an **envelope**.  Each envelope includes:
 - a signature with the secret project write key
 - a signature with the secret log write key
 - the entry, encrypted with the project read key
