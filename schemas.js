@@ -29,7 +29,7 @@ function base64String (bytes) {
 const index = { type: 'integer', minimum: 0 }
 const name = { type: 'string', minLength: 1, maxLength: 256 }
 const timestamp = { type: 'string', format: 'date-time' }
-const text = { stype: 'string', minLength: 1 }
+const text = { type: 'string', minLength: 1 }
 
 const digest = base64String(crypto.digestBytes)
 const discoveryKey = base64String(crypto.digestBytes)
